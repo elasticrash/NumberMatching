@@ -8,7 +8,7 @@ namespace dotnet
     class Program
     {
         public static Index Index = new Index();
-        public static int Size = 10000;
+        public static int Size = 100000;
         public static List<long> Numbers = new RandomNumberGenerator(Size).RandomNumbers;
         public static int IndexPointer = 0;
 
@@ -37,7 +37,7 @@ namespace dotnet
             }
             else
             {
-                var start  = DateTime.Now.Ticks;
+                var start = DateTime.Now.Ticks;
                 var searcResult = NumberSearch(a);
                 Console.WriteLine($"it took {new TimeSpan(DateTime.Now.Ticks - start).TotalMilliseconds} ms to search");
                 Console.WriteLine(searcResult);
@@ -50,12 +50,20 @@ namespace dotnet
         {
             var chararray = n.ToString().ToCharArray();
             var nextStep = n.ToString().Substring(1);
+            if (nextStep == "") return;
             var nextLevel = level + 1;
-            for (int i = 0; i < chararray.Length-1; i++)
+            for (int i = 0; i < chararray.Length; i += 2)
             {
                 var charA = chararray[i];
-                var charB = chararray[i + 1];
-                var key = $"{charA}{charB}";
+                Char? charB = null;
+
+                if (i + 1 < chararray.Length)
+                {
+                    charB = chararray[i + 1];
+                }
+
+                var key = GetKey(charA, charB);
+
                 if (!index.Lookup.ContainsKey(key))
                 {
                     var newIndex = new Index();
@@ -82,16 +90,29 @@ namespace dotnet
             }
         }
 
+
+        private static string GetKey(Char A, Char? B)
+        {
+            return B != null ? $"{A}{B}" : $"{A}X";
+        }
+
         private static string NumberSearch(string search)
         {
             var chararray = search.ToCharArray();
             var tokens = new List<string>();
 
-            for (int i = 0; i < chararray.Length - 1; i++)
+            for (int i = 0; i < chararray.Length; i += 2)
             {
                 var charA = chararray[i];
-                var charB = chararray[i + 1];
-                tokens.Add($"{charA}{charB}");
+                Char? charB = null;
+
+                if (i + 1 < chararray.Length)
+                {
+                    charB = chararray[i + 1];
+                }
+
+                var key = GetKey(charA, charB);
+                tokens.Add(key);
             }
 
             var result = Index;
@@ -99,7 +120,7 @@ namespace dotnet
             {
                 if (result.Lookup.ContainsKey(t))
                 {
-                    result = (Index) result.Lookup[t];
+                    result = (Index)result.Lookup[t];
                 }
                 else
                 {
