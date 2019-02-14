@@ -2,18 +2,22 @@
 using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
+using ProtoBuf;
 
 namespace dotnet
 {
     class Program
     {
         public static Index Index = new Index();
-        public static int Size = 100000;
-        public static List<long> Numbers = new RandomNumberGenerator(Size).RandomNumbers;
+        public static List<long> Numbers;
         public static int IndexPointer = 0;
 
         static void Main(string[] args)
         {
+
+            ReadFromFiles();
+
             Console.WriteLine($"Generating Index {DateTime.Now}");
             for (var i = 0; i < Numbers.Count; i++)
             {
@@ -24,6 +28,34 @@ namespace dotnet
             Console.WriteLine($"Index completed {DateTime.Now}");
 
             EnterValue();
+        }
+
+
+        private static void ReadFromFiles()
+        {
+            var files = from f in Directory.EnumerateFiles("./")
+                        where f.EndsWith(".bin")
+                        select f;
+
+            foreach (var fl in files)
+            {
+                Console.WriteLine($"Processing file {fl} {DateTime.Now}");
+
+                if (fl.Contains("numbers"))
+                {
+                    using (var file = File.OpenRead(fl))
+                    {
+                        Numbers = Serializer.Deserialize<List<long>>(file);
+                    }
+                }
+                // else if (fl.Contains("index"))
+                // {
+                //     using (var file = File.OpenRead(fl))
+                //     {
+                //         Indices.Add(Serializer.Deserialize<Index>(file));
+                //     }
+                // }
+            }
         }
 
         private static void EnterValue()
@@ -50,20 +82,12 @@ namespace dotnet
         {
             var chararray = n.ToString().ToCharArray();
             var nextStep = n.ToString().Substring(1);
-            if (nextStep == "") return;
             var nextLevel = level + 1;
-            for (int i = 0; i < chararray.Length; i += 2)
+            for (int i = 0; i < chararray.Length - 1; i++)
             {
                 var charA = chararray[i];
-                Char? charB = null;
-
-                if (i + 1 < chararray.Length)
-                {
-                    charB = chararray[i + 1];
-                }
-
-                var key = GetKey(charA, charB);
-
+                var charB = chararray[i + 1];
+                var key = $"{charA}{charB}";
                 if (!index.Lookup.ContainsKey(key))
                 {
                     var newIndex = new Index();
@@ -85,15 +109,9 @@ namespace dotnet
 
             if (level == 1)
             {
-                Console.Write("\r building index {0}/{1}", IndexPointer, Size);
+                Console.Write("\r building index {0}/{1}", IndexPointer, Numbers.Count);
                 IndexPointer++;
             }
-        }
-
-
-        private static string GetKey(Char A, Char? B)
-        {
-            return B != null ? $"{A}{B}" : $"{A}X";
         }
 
         private static string NumberSearch(string search)
@@ -101,18 +119,11 @@ namespace dotnet
             var chararray = search.ToCharArray();
             var tokens = new List<string>();
 
-            for (int i = 0; i < chararray.Length; i += 2)
+            for (int i = 0; i < chararray.Length - 1; i++)
             {
                 var charA = chararray[i];
-                Char? charB = null;
-
-                if (i + 1 < chararray.Length)
-                {
-                    charB = chararray[i + 1];
-                }
-
-                var key = GetKey(charA, charB);
-                tokens.Add(key);
+                var charB = chararray[i + 1];
+                tokens.Add($"{charA}{charB}");
             }
 
             var result = Index;
