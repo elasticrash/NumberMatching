@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using ProtoBuf;
 
@@ -19,10 +18,10 @@ namespace dotnet
             ReadFromFiles();
 
             Console.WriteLine($"Generating Index {DateTime.Now}");
-            for (var i = 0; i < Numbers.Count; i++)
+            for (var i = 0; i < 10000; i++)
             {
                 var n = Numbers[i];
-                Tokenize(n, Index, i);
+                Tokenize(n.ToString(), Index, i);
             }
 
             Console.WriteLine($"Index completed {DateTime.Now}");
@@ -70,24 +69,32 @@ namespace dotnet
             else
             {
                 var start = DateTime.Now.Ticks;
-                var searcResult = NumberSearch(a);
+                var searchResult = NumberSearch(a);
                 Console.WriteLine($"it took {new TimeSpan(DateTime.Now.Ticks - start).TotalMilliseconds} ms to search");
-                Console.WriteLine(searcResult);
+                Console.WriteLine(searchResult);
 
                 EnterValue();
             }
         }
 
-        private static void Tokenize(long n, Index index, Int32 id, int level = 1)
+        private static void Tokenize(string n, Index index, Int32 id, int level = 1)
         {
-            var chararray = n.ToString().ToCharArray();
-            var nextStep = n.ToString().Substring(1);
-            var nextLevel = level + 1;
-            for (int i = 0; i < chararray.Length - 1; i++)
+            if (level == 1)
             {
-                var charA = chararray[i];
-                var charB = chararray[i + 1];
-                var key = $"{charA}{charB}";
+                Console.Write("\r building index {0}/{1}", IndexPointer, Numbers.Count);
+                IndexPointer++;
+            }
+            
+            var charArray = n.ToCharArray();
+            if(charArray.Length == 0) return;
+            var nextStep = n.Substring(1);
+            var nextLevel = level + 1;
+            for (var i = 0; i < charArray.Length; i++)
+            {
+                var a = charArray[i];
+                var key = (charArray.Length - i > 4) ? $"{a}" : n.ToString().Substring(i);
+                if(charArray.Length - i < 4) return;
+                //var key = a.ToString();
                 if (!index.Lookup.ContainsKey(key))
                 {
                     var newIndex = new Index();
@@ -97,42 +104,48 @@ namespace dotnet
                     {
                         newIndex.Matches.Add(id);
                     }
-                    Tokenize(Convert.ToInt32(nextStep), newIndex, id, nextLevel);
+
+                    Tokenize(nextStep, newIndex, id, nextLevel);
                 }
                 else
                 {
-                    Index existingIndex = (Index)index.Lookup[key];
+                    Index existingIndex = (Index) index.Lookup[key];
                     existingIndex.Matches.Add(id);
-                    Tokenize(Convert.ToInt32(nextStep), existingIndex, id, nextLevel);
+                    Tokenize(nextStep, existingIndex, id, nextLevel);
                 }
             }
 
-            if (level == 1)
-            {
-                Console.Write("\r building index {0}/{1}", IndexPointer, Numbers.Count);
-                IndexPointer++;
-            }
+
         }
 
         private static string NumberSearch(string search)
         {
-            var chararray = search.ToCharArray();
+            var charArray = search.ToCharArray();
             var tokens = new List<string>();
 
-            for (int i = 0; i < chararray.Length - 1; i++)
+            for (var i = 0; i < charArray.Length; i++)
             {
-                var charA = chararray[i];
-                var charB = chararray[i + 1];
-                tokens.Add($"{charA}{charB}");
+                var a = charArray[i];
+                if (charArray.Length - i < 4) tokens.Add($"{search.ToString().Substring(i)}");
+                tokens.Add($"{a.ToString()}");
             }
 
             var result = Index;
+            var matches = new List<int>();
             foreach (var t in tokens)
             {
                 if (result.Lookup.ContainsKey(t))
                 {
-                    result = (Index)result.Lookup[t];
-                }
+                    result = result.Lookup[t];
+                } 
+//                else if (t.Length > 1){
+//                    var keyList = result.Lookup.Keys.Where(k => k.StartsWith(t)).ToList();
+//
+//                    foreach (var res in keyList)
+//                    {
+//                        matches.AddRange(result.Lookup[res].Matches);
+//                    }
+//                }
                 else
                 {
                     result = null;
@@ -140,6 +153,12 @@ namespace dotnet
                 }
             }
 
+            if (result != null && matches.Count == 0) matches = result.Matches; 
+
+            //if (matches.Count == 0) return "no matches found";
+            //var getNumbers = matches.Select(m => Numbers[m]).ToList();
+            //return String.Join(",", getNumbers);
+            
             if (result == null) return "no matches found";
             var getNumbers = result.Matches.Select(m => Numbers[m]).ToList();
             return String.Join(",", getNumbers);
