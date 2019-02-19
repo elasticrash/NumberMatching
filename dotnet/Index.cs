@@ -4,6 +4,7 @@ using System.Collections.Generic;
 
 namespace dotnet
 {
+    [Serializable]
     public class Index
     {
         public Index()
