@@ -29,7 +29,7 @@ namespace dotnet
             }
 
             Console.WriteLine($"Generating Index {DateTime.Now}");
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < Numbers.Count; i++)
             {
                 var n = Numbers[i];
                 Tokenize(n.ToString(), Index, i);
@@ -92,37 +92,45 @@ namespace dotnet
         {
             if (level == 1)
             {
-                Console.Write("\r building index {0}/{1}", IndexPointer, Numbers.Count);
+                if (IndexPointer % 1000 == 0)
+                {
+                    Console.Write("\r building index {0}/{1}", IndexPointer, Numbers.Count);
+                }
+
                 IndexPointer++;
             }
 
             var charArray = n.ToCharArray();
             if (charArray.Length == 0) return;
-            var nextStep = n.Substring(1);
             var nextLevel = level + 1;
             for (var i = 0; i < charArray.Length; i++)
             {
-                var a = charArray[i];
-                var key = (charArray.Length - i > 4) ? $"{a}" : n.ToString().Substring(i);
-                if (charArray.Length - i < 4) return;
+                var key = (charArray.Length - i > 4) ? $"{charArray[i]}" : n.ToString().Substring(i);
+                if (charArray.Length - i < 4) break;
                 if (!index.Lookup.ContainsKey(key))
                 {
                     var newIndex = new Index();
                     index.Lookup.Add(key, newIndex);
-                    var exists = newIndex.Matches.Exists(x => x == id);
-                    if (!exists)
-                    {
-                        newIndex.Matches.Add(id);
-                    }
-
-                    Tokenize(nextStep, newIndex, id, nextLevel);
+                    newIndex.Matches.Add(id);
                 }
                 else
                 {
-                    Index existingIndex = (Index)index.Lookup[key];
-                    existingIndex.Matches.Add(id);
-                    Tokenize(nextStep, existingIndex, id, nextLevel);
+                    Index existingIndex = (Index) index.Lookup[key];
+                    var exists = existingIndex.Matches.Exists(x => x == id);
+                    if (!exists)
+                    {
+                        existingIndex.Matches.Add(id);
+                    }
                 }
+
+
+                var previousIndex = index.Lookup[key];
+                var nextStep = n.Substring(i+1);
+                var nextKey = (nextStep.ToCharArray().Length - i > 4)
+                    ? $"{nextStep.ToCharArray()[0]}"
+                    : n.ToString().Substring(i);
+
+                Tokenize(nextStep, previousIndex, id, nextLevel);
             }
         }
 
@@ -163,19 +171,13 @@ namespace dotnet
                 Console.WriteLine($"type: complex");
                 var remain = search.Substring(tokensProcessed);
                 var keyMainList = current.Lookup.Where(k => k.Key.StartsWith(remain)).ToList();
-
-                if (keyMainList.Count > 0)
+                
+                result.AddRange(keyMainList.Select(x => x.Value));
+                remain = search.Substring(tokensProcessed - 1);
+                if (previous != null)
                 {
-                    result.AddRange(keyMainList.Select(x=>x.Value));
-                }
-                else
-                {
-                    if (previous != null)
-                    {
-                        remain = search.Substring(tokensProcessed-1);
-                        var keyPreviousList = previous.Lookup.Where(k => k.Key.StartsWith(remain)).ToList();
-                        result.AddRange(keyPreviousList.Select(x=>x.Value));
-                    }
+                    var keyPreviousList = previous.Lookup.Where(k => k.Key.StartsWith(remain)).ToList();
+                    result.AddRange(keyPreviousList.Select(x => x.Value));
                 }
             }
 
