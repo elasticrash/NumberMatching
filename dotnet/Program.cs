@@ -112,21 +112,56 @@ namespace dotnet
                     index.Lookup.Add(key, newIndex);
                     newIndex.Matches.Add(id);
                 }
-                else
-                {
-                    Index existingIndex = (Index) index.Lookup[key];
-                    var exists = existingIndex.Matches.Exists(x => x == id);
-                    if (!exists)
-                    {
-                        existingIndex.Matches.Add(id);
-                    }
-                }
+//                else
+//                {
+//                    Index existingIndex = (Index) index.Lookup[key];
+//                    var exists = existingIndex.Matches.Exists(x => x == id);
+//                    if (!exists)
+//                    {
+//                        existingIndex.Matches.Add(id);
+//                    }
+//                }
 
                 var previousIndex = index.Lookup[key];
                 var nextStep = n.Substring(i+1);
 
-                Tokenize(nextStep, previousIndex, id, nextLevel);
+                PopulateNextLevel(nextStep, previousIndex, id, nextLevel);
             }
+        }
+
+        private static void PopulateNextLevel(string sub, Index index, Int32 id, int level)
+        {
+            if (sub.ToCharArray().Length == 0) return;
+            var key = sub[0].ToString();
+            
+            if (!index.Lookup.ContainsKey(key))
+            {
+                var newIndex = new Index();
+                index.Lookup.Add(key, newIndex);
+                if (level > 3)
+                {
+                    newIndex.Matches.Add(id);
+                }
+            }
+            else
+            {
+                Index existingIndex = (Index) index.Lookup[key];
+                var exists = existingIndex.Matches.Exists(x => x == id);
+                if (!exists)
+                {
+                    if (level > 3)
+                    {
+                        existingIndex.Matches.Add(id);
+                    }
+                }
+            }
+            
+            var previousIndex = index.Lookup[key];
+            var nextStep = sub.Substring(1);
+            var nextLevel = level + 1;
+            
+
+            PopulateNextLevel(nextStep, previousIndex, id, nextLevel);
         }
 
         private static string NumberSearch(string search)
