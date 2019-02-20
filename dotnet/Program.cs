@@ -29,7 +29,7 @@ namespace dotnet
             }
 
             Console.WriteLine($"Generating Index {DateTime.Now}");
-            for (var i = 0; i < Numbers.Count; i++)
+            for (var i = 0; i < 50000; i++)
             {
                 var n = Numbers[i];
                 Tokenize(n.ToString(), Index, i);
@@ -105,8 +105,7 @@ namespace dotnet
             var nextLevel = level + 1;
             for (var i = 0; i < charArray.Length; i++)
             {
-                var key = (charArray.Length - i > 4) ? $"{charArray[i]}" : n.ToString().Substring(i);
-                if (charArray.Length - i < 4) break;
+                var key = charArray[i].ToString();
                 if (!index.Lookup.ContainsKey(key))
                 {
                     var newIndex = new Index();
@@ -123,12 +122,8 @@ namespace dotnet
                     }
                 }
 
-
                 var previousIndex = index.Lookup[key];
                 var nextStep = n.Substring(i+1);
-                var nextKey = (nextStep.ToCharArray().Length - i > 4)
-                    ? $"{nextStep.ToCharArray()[0]}"
-                    : n.ToString().Substring(i);
 
                 Tokenize(nextStep, previousIndex, id, nextLevel);
             }
@@ -142,45 +137,28 @@ namespace dotnet
             var tokens = charArray.Select(a => $"{a.ToString()}").ToList();
 
             var current = Index;
-            Index previous = null;
             var matches = new List<int>();
             var result = new List<Index>();
-            var tokensProcessed = 0;
 
-            foreach (var t in tokens)
+            foreach (var t in charArray)
             {
-                if (current.Lookup.ContainsKey(t))
+                if (!current.Lookup.ContainsKey(t.ToString()))
                 {
-                    previous = current;
-                    current = current.Lookup[t];
-                    tokensProcessed++;
-                }
-                else
-                {
+                    current = null;
                     break;
-                }
+                };
+                current = current.Lookup[t.ToString()];
             }
 
-            if (tokensProcessed == tokens.Count)
+            if (current != null)
             {
-                Console.WriteLine($"type: simple");
                 result.Add(current);
             }
             else
             {
-                Console.WriteLine($"type: complex");
-                var remain = search.Substring(tokensProcessed);
-                var keyMainList = current.Lookup.Where(k => k.Key.StartsWith(remain)).ToList();
-                
-                result.AddRange(keyMainList.Select(x => x.Value));
-                remain = search.Substring(tokensProcessed - 1);
-                if (previous != null)
-                {
-                    var keyPreviousList = previous.Lookup.Where(k => k.Key.StartsWith(remain)).ToList();
-                    result.AddRange(keyPreviousList.Select(x => x.Value));
-                }
+                return "no matches found";
             }
-
+            
             if (matches.Count == 0) matches = result.SelectMany(x=>x.Matches).ToList().Distinct().ToList();
 
             if (matches.Count == 0) return "no matches found";
