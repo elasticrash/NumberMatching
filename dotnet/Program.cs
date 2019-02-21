@@ -58,13 +58,6 @@ namespace dotnet
                         Numbers = Serializer.Deserialize<List<long>>(file);
                     }
                 }
-                // else if (fl.Contains("index"))
-                // {
-                //     using (var file = File.OpenRead(fl))
-                //     {
-                //         Indices.Add(Serializer.Deserialize<Index>(file));
-                //     }
-                // }
             }
         }
 
@@ -112,16 +105,6 @@ namespace dotnet
                     index.Lookup.Add(key, newIndex);
                     newIndex.Matches.Add(id);
                 }
-//                else
-//                {
-//                    Index existingIndex = (Index) index.Lookup[key];
-//                    var exists = existingIndex.Matches.Exists(x => x == id);
-//                    if (!exists)
-//                    {
-//                        existingIndex.Matches.Add(id);
-//                    }
-//                }
-
                 var previousIndex = index.Lookup[key];
                 var nextStep = n.Substring(i+1);
 
