@@ -10,10 +10,10 @@ namespace dotnet
         public Index()
         {
             Matches = new List<Int32>();
-            Lookup = new Dictionary<string, Index>();
+            Lookup = new Dictionary<Int32, Index>();
         }
 
         public List<Int32> Matches { get; set; }
-        public Dictionary<string, Index> Lookup { get; set; }
+        public Dictionary<Int32, Index> Lookup { get; set; }
     }
 }

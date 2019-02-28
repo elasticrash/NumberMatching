@@ -7,38 +7,32 @@ using ProtoBuf;
 
 namespace dotnet
 {
-    class Program
+    internal static class Program
     {
-        public static Dictionary<string, Index> Indices = new Dictionary<string, Index>();
-        public static List<long> Numbers;
-        public static int IndexPointer = 0;
+        private static readonly Dictionary<int, Index> Indices = new Dictionary<int, Index>();
+        private static List<long> _numbers;
+        private static int _indexPointer = 0;
 
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-
             ReadFromFiles();
 
             for (var i = 0; i < 10; i++)
             {
-                var n = Numbers[i];
+                var n = _numbers[i];
                 if (i == 0)
                 {
                     Console.WriteLine($"Printing sample numbers");
                 }
+
                 Console.WriteLine($"{n.ToString()}");
             }
 
             Console.WriteLine($"Generating Index {DateTime.Now}");
-            for (var i = 0; i < Numbers.Count; i++)
+            for (var i = 0; i < _numbers.Count; i++)
             {
-                var n = Numbers[i];
-                var keyName = n.ToString().Substring(0, 1);
-                var index = Indices.ContainsKey(keyName) ? Indices[keyName] : new Index();
-                if (!Indices.ContainsKey(keyName))
-                {
-                    Indices[keyName] = index;
-                }
-                Tokenize(n.ToString(), index, i);
+                var n = _numbers[i];
+                Tokenize(n.ToString(), Indices, i);
             }
 
             Console.WriteLine($"Index completed {DateTime.Now}");
@@ -50,19 +44,17 @@ namespace dotnet
         private static void ReadFromFiles()
         {
             var files = from f in Directory.EnumerateFiles("./")
-                        where f.EndsWith(".bin")
-                        select f;
+                where f.EndsWith(".bin")
+                select f;
 
             foreach (var fl in files)
             {
                 Console.WriteLine($"Processing file {fl} {DateTime.Now}");
 
-                if (fl.Contains("numbers"))
+                if (!fl.Contains("numbers")) continue;
+                using (var file = File.OpenRead(fl))
                 {
-                    using (var file = File.OpenRead(fl))
-                    {
-                        Numbers = Serializer.Deserialize<List<long>>(file);
-                    }
+                    _numbers = Serializer.Deserialize<List<long>>(file);
                 }
             }
         }
@@ -73,56 +65,61 @@ namespace dotnet
 
             var a = Console.ReadLine();
 
-            if (a == "x")
-            {
-            }
-            else
-            {
-                var start = DateTime.Now.Ticks;
-                var searchResult = NumberSearch(a);
-                Console.WriteLine($"it took {new TimeSpan(DateTime.Now.Ticks - start).TotalMilliseconds} ms to search");
-                Console.WriteLine(searchResult);
-
-                EnterValue();
-            }
+            if (a == "x") return;
+            var start = DateTime.Now.Ticks;
+            var searchResult = NumberSearch(a);
+            Console.WriteLine($"it took {new TimeSpan(DateTime.Now.Ticks - start).TotalMilliseconds} ms to search");
+            Console.WriteLine(searchResult);
+            EnterValue();
         }
 
-        private static void Tokenize(string n, Index index, Int32 id, int level = 1)
+        private static void Tokenize(string n, Dictionary<int, Index> Indices, int id, int level = 1)
         {
             if (level == 1)
             {
-                if (IndexPointer % 1000 == 0)
+                if (_indexPointer % 1000 == 0)
                 {
-                    Console.Write("\r building index {0}/{1}", IndexPointer, Numbers.Count);
+                    Console.Write("\r building index {0}/{1}", _indexPointer, _numbers.Count);
                 }
 
-                IndexPointer++;
+                _indexPointer++;
             }
 
             var charArray = n.ToCharArray();
-            if (charArray.Length == 0) return;
             var nextLevel = level + 1;
             for (var i = 0; i < charArray.Length; i++)
             {
-                var key = charArray[i].ToString();
-                if (!index.Lookup.ContainsKey(key))
+                var key = Convert.ToInt32(charArray[i].ToString());
+                if (!Indices.ContainsKey(key))
                 {
                     var newIndex = new Index();
-                    index.Lookup.Add(key, newIndex);
-                    newIndex.Matches.Add(id);
+                    Indices.Add(key, newIndex);
                 }
-                var previousIndex = index.Lookup[key];
-                var nextStep = n.Substring(i+1);
+                
+                if (charArray.Length - i < 4) continue;
+                var nextStep = n.Substring(i + 1);
+                var nextKey = Convert.ToInt32(charArray[i + 1].ToString());
+                Index nextIndex = null;
 
-                PopulateNextLevel(nextStep, previousIndex, id, nextLevel);
+                    if (Indices[key].Lookup.ContainsKey(nextKey))
+                    {
+                        nextIndex = Indices[key].Lookup[nextKey];
+                    }
+                    else
+                    {
+                        nextIndex = new Index();
+                        Indices[key].Lookup.Add(nextKey, nextIndex);
+                    }
+
+                PopulateNextLevel(nextStep, nextIndex, id, nextLevel);
             }
         }
 
         private static void PopulateNextLevel(string sub, Index index, Int32 id, int level)
         {
             if (sub.ToCharArray().Length == 0) return;
-            var key = sub[0].ToString();
-            
+            var key = Convert.ToInt32(sub[0].ToString());
+
             if (!index.Lookup.ContainsKey(key))
             {
                 var newIndex = new Index();
@@ -144,11 +141,11 @@ namespace dotnet
                     }
                 }
             }
-            
+
             var previousIndex = index.Lookup[key];
             var nextStep = sub.Substring(1);
             var nextLevel = level + 1;
-            
+
 
             PopulateNextLevel(nextStep, previousIndex, id, nextLevel);
         }
@@ -160,18 +157,20 @@ namespace dotnet
             if (charArray.Length < 4) return "you need at least 4 characters to do a search";
             var tokens = charArray.Select(a => $"{a.ToString()}").ToList();
 
-            var current = Indices[search.Substring(0,1)];
+            var current = Indices[Convert.ToInt32(search.Substring(0, 1))];
             var matches = new List<int>();
             var result = new List<Index>();
 
             foreach (var t in charArray)
             {
-                if (!current.Lookup.ContainsKey(t.ToString()))
+                var key = t.ToString();
+                if (!current.Lookup.ContainsKey(Convert.ToInt32(key)))
                 {
                     current = null;
                     break;
-                };
-                current = current.Lookup[t.ToString()];
+                }
+                
+                current = current.Lookup[Convert.ToInt32(key)];
             }
 
             if (current != null)
@@ -182,12 +181,12 @@ namespace dotnet
             {
                 return "no matches found";
             }
-            
-            if (matches.Count == 0) matches = result.SelectMany(x=>x.Matches).ToList().Distinct().ToList();
+
+            if (matches.Count == 0) matches = result.SelectMany(x => x.Matches).ToList().Distinct().ToList();
 
             if (matches.Count == 0) return "no matches found";
-            var getNumbers = matches.Select(m => Numbers[m]).ToList();
-            return String.Join(",", getNumbers);
+            var getNumbers = matches.Select(m => _numbers[m]).ToList();
+            return string.Join(",", getNumbers);
         }
     }
 }
