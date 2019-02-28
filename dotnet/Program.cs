@@ -9,7 +9,7 @@ namespace dotnet
 {
     class Program
     {
-        public static Index Index = new Index();
+        public static Dictionary<string, Index> Indices = new Dictionary<string, Index>();
         public static List<long> Numbers;
         public static int IndexPointer = 0;
 
@@ -29,10 +29,16 @@ namespace dotnet
             }
 
             Console.WriteLine($"Generating Index {DateTime.Now}");
-            for (var i = 0; i < 50000; i++)
+            for (var i = 0; i < Numbers.Count; i++)
             {
                 var n = Numbers[i];
-                Tokenize(n.ToString(), Index, i);
+                var keyName = n.ToString().Substring(0, 1);
+                var index = Indices.ContainsKey(keyName) ? Indices[keyName] : new Index();
+                if (!Indices.ContainsKey(keyName))
+                {
+                    Indices[keyName] = index;
+                }
+                Tokenize(n.ToString(), index, i);
             }
 
             Console.WriteLine($"Index completed {DateTime.Now}");
@@ -154,7 +160,7 @@ namespace dotnet
             if (charArray.Length < 4) return "you need at least 4 characters to do a search";
             var tokens = charArray.Select(a => $"{a.ToString()}").ToList();
 
-            var current = Index;
+            var current = Indices[search.Substring(0,1)];
             var matches = new List<int>();
             var result = new List<Index>();
 
