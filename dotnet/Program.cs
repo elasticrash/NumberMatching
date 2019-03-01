@@ -17,17 +17,6 @@ namespace dotnet
         {
             ReadFromFiles();
 
-            for (var i = 0; i < 10; i++)
-            {
-                var n = _numbers[i];
-                if (i == 0)
-                {
-                    Console.WriteLine($"Printing sample numbers");
-                }
-
-                Console.WriteLine($"{n.ToString()}");
-            }
-
             Console.WriteLine($"Generating Index {DateTime.Now}");
             for (var i = 0; i < _numbers.Count; i++)
             {
@@ -153,16 +142,15 @@ namespace dotnet
 
         private static string NumberSearch(string search)
         {
-            var charArray = search.ToCharArray();
-            if (!charArray.All(char.IsDigit)) return "string contains invalid characters";
-            if (charArray.Length < 4) return "you need at least 4 characters to do a search";
-            var tokens = charArray.Select(a => $"{a.ToString()}").ToList();
+            var searchCharArray = search.ToCharArray();
+            if (!searchCharArray.All(char.IsDigit)) return "string contains invalid characters";
+            if (searchCharArray.Length < 4) return "you need at least 4 characters to do a search";
 
             var current = Indices[search[0] & 0x0f];
             var matches = new List<int>();
             var result = new List<Index>();
 
-            foreach (var t in charArray)
+            foreach (var t in searchCharArray)
             {
                 var key = t & 0x0f;
                 if (!current.Lookup.ContainsKey(key))
