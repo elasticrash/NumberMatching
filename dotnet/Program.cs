@@ -11,7 +11,7 @@ namespace dotnet
     {
         private static readonly Dictionary<int, Index> Indices = new Dictionary<int, Index>();
         private static List<long> _numbers;
-        private static int _indexPointer = 0;
+        private static int _indexPointer = 1;
 
         private static void Main(string[] args)
         {
@@ -44,8 +44,8 @@ namespace dotnet
         private static void ReadFromFiles()
         {
             var files = from f in Directory.EnumerateFiles("./")
-                where f.EndsWith(".bin")
-                select f;
+                        where f.EndsWith(".bin")
+                        select f;
 
             foreach (var fl in files)
             {
@@ -77,7 +77,7 @@ namespace dotnet
         {
             if (level == 1)
             {
-                if (_indexPointer % 1000 == 0)
+                if (_indexPointer % 10000 == 0)
                 {
                     Console.Write("\r building index {0}/{1}", _indexPointer, _numbers.Count);
                 }
@@ -89,27 +89,28 @@ namespace dotnet
             var nextLevel = level + 1;
             for (var i = 0; i < charArray.Length; i++)
             {
-                var key = Convert.ToInt32(charArray[i].ToString());
+                var digit = charArray[i];
+                var key = digit & 0x0f;
                 if (!Indices.ContainsKey(key))
                 {
                     var newIndex = new Index();
                     Indices.Add(key, newIndex);
                 }
-                
+
                 if (charArray.Length - i < 4) continue;
                 var nextStep = n.Substring(i + 1);
-                var nextKey = Convert.ToInt32(charArray[i + 1].ToString());
+                var nextKey = digit & 0x0f;
                 Index nextIndex = null;
 
-                    if (Indices[key].Lookup.ContainsKey(nextKey))
-                    {
-                        nextIndex = Indices[key].Lookup[nextKey];
-                    }
-                    else
-                    {
-                        nextIndex = new Index();
-                        Indices[key].Lookup.Add(nextKey, nextIndex);
-                    }
+                if (Indices[key].Lookup.ContainsKey(nextKey))
+                {
+                    nextIndex = Indices[key].Lookup[nextKey];
+                }
+                else
+                {
+                    nextIndex = new Index();
+                    Indices[key].Lookup.Add(nextKey, nextIndex);
+                }
 
                 PopulateNextLevel(nextStep, nextIndex, id, nextLevel);
             }
@@ -118,7 +119,7 @@ namespace dotnet
         private static void PopulateNextLevel(string sub, Index index, Int32 id, int level)
         {
             if (sub.ToCharArray().Length == 0) return;
-            var key = Convert.ToInt32(sub[0].ToString());
+            var key = sub[0] & 0x0f;
 
             if (!index.Lookup.ContainsKey(key))
             {
@@ -131,7 +132,7 @@ namespace dotnet
             }
             else
             {
-                Index existingIndex = (Index) index.Lookup[key];
+                Index existingIndex = (Index)index.Lookup[key];
                 var exists = existingIndex.Matches.Exists(x => x == id);
                 if (!exists)
                 {
@@ -152,25 +153,25 @@ namespace dotnet
 
         private static string NumberSearch(string search)
         {
-
             var charArray = search.ToCharArray();
+            if (!charArray.All(char.IsDigit)) return "string contains invalid characters";
             if (charArray.Length < 4) return "you need at least 4 characters to do a search";
             var tokens = charArray.Select(a => $"{a.ToString()}").ToList();
 
-            var current = Indices[Convert.ToInt32(search.Substring(0, 1))];
+            var current = Indices[search[0] & 0x0f];
             var matches = new List<int>();
             var result = new List<Index>();
 
             foreach (var t in charArray)
             {
-                var key = t.ToString();
-                if (!current.Lookup.ContainsKey(Convert.ToInt32(key)))
+                var key = t & 0x0f;
+                if (!current.Lookup.ContainsKey(key))
                 {
                     current = null;
                     break;
                 }
-                
-                current = current.Lookup[Convert.ToInt32(key)];
+
+                current = current.Lookup[key];
             }
 
             if (current != null)
@@ -182,7 +183,7 @@ namespace dotnet
                 return "no matches found";
             }
 
-            if (matches.Count == 0) matches = result.SelectMany(x => x.Matches).ToList().Distinct().ToList();
+            if (matches.Count == 0) matches = result.SelectMany(x => x.Matches).ToList();
 
             if (matches.Count == 0) return "no matches found";
             var getNumbers = matches.Select(m => _numbers[m]).ToList();
