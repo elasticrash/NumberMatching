@@ -1,2 +1,4 @@
 typescript/node_modules
 typescript/dist
+rust/target
+rust/*.lock

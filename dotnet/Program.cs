@@ -12,6 +12,7 @@ namespace dotnet
         private static readonly Dictionary<int, Index> Indices = new Dictionary<int, Index>();
         private static List<long> _numbers;
         private static int _indexPointer = 1;
+        private static int matches = 0;
 
         private static void Main(string[] args)
         {
@@ -25,6 +26,7 @@ namespace dotnet
             }
 
             Console.WriteLine($"Index completed {DateTime.Now}");
+            Console.WriteLine($"number of pre stored endpoints {matches}");
 
             EnterValue();
         }
@@ -117,6 +119,7 @@ namespace dotnet
                 if (level > 3)
                 {
                     newIndex.Matches.Add(id);
+                    matches++;
                 }
             }
             else
@@ -128,6 +131,7 @@ namespace dotnet
                     if (level > 3)
                     {
                         existingIndex.Matches.Add(id);
+                        matches++;
                     }
                 }
             }
