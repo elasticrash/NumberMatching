@@ -40,7 +40,7 @@ fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize, level: i32) {
         let key = i32::from_str(&string_key).unwrap_or(0);
 
         if !index.contains_key(&key) {
-            let mut new_index =  Indx {
+            let mut new_index = Indx {
                 d: HashMap::new(),
                 m: vec![],
             };
@@ -53,12 +53,12 @@ fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize, level: i32) {
         }
 
         let next_step = &num.to_string()[(x + 1)..];
-
-        populate_next_level(next_step.to_string(), index.get(&key), id, level + 1);
+        let map = index.get_mut(&key);
+        populate_next_level(next_step.to_string(), map, id, level + 1);
     }
 }
 
-fn populate_next_level(step: String, mut opt: Option<&Indx>, id: usize, level: i32) {
+fn populate_next_level(step: String, mut opt: Option<&mut Indx>, id: usize, level: i32) {
     let sub: Vec<char> = step.chars().collect();
     if sub.len() == 0 {
         return;
@@ -67,17 +67,18 @@ fn populate_next_level(step: String, mut opt: Option<&Indx>, id: usize, level: i
     let digit = sub[0];
     let string_key = digit.to_string();
     let key = i32::from_str(&string_key).unwrap_or(0);
-    let &mut index: &Indx = opt.unwrap();
+    let index: &mut Indx = opt.unwrap();
 
     if !index.d.contains_key(&key) {
         let mut new_index = Indx {
             d: HashMap::new(),
             m: vec![],
         };
-        index.d.insert(key, new_index);
+
         if level > 3 {
             new_index.m.push(id.to_string());
         }
+        index.d.insert(key, new_index);
     } else {
 
     }
