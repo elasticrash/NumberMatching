@@ -16,7 +16,7 @@ fn main() {
     let mut indexed_tokens: HashMap<i32, Indx> = HashMap::new();
 
     for x in 0..generated_numbers.len() {
-        tokenize(generated_numbers[x], &mut indexed_tokens, x);
+        tokenize(generated_numbers[x], &mut indexed_tokens, x, 1);
     }
 }
 
@@ -31,7 +31,7 @@ fn random_number_generator() -> Vec<i32> {
     return numbers;
 }
 
-fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize) {
+fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize, level: i32) {
     let char_vec: Vec<char> = num.to_string().chars().collect();
 
     for x in 0..char_vec.len() {
@@ -40,7 +40,7 @@ fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize) {
         let key = i32::from_str(&string_key).unwrap_or(0);
 
         if !index.contains_key(&key) {
-            let new_index = Indx {
+            let mut new_index =  Indx {
                 d: HashMap::new(),
                 m: vec![],
             };
@@ -54,10 +54,31 @@ fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize) {
 
         let next_step = &num.to_string()[(x + 1)..];
 
-        populate_next_level(next_step, index.get(key), id);
+        populate_next_level(next_step.to_string(), index.get(&key), id, level + 1);
     }
 }
 
-fn populate_next_level(step: String, index: &mut HashMap<i32, Indx>, id: usize) {
-    println!("{:?}", step);
+fn populate_next_level(step: String, mut opt: Option<&Indx>, id: usize, level: i32) {
+    let sub: Vec<char> = step.chars().collect();
+    if sub.len() == 0 {
+        return;
+    }
+
+    let digit = sub[0];
+    let string_key = digit.to_string();
+    let key = i32::from_str(&string_key).unwrap_or(0);
+    let &mut index: &Indx = opt.unwrap();
+
+    if !index.d.contains_key(&key) {
+        let mut new_index = Indx {
+            d: HashMap::new(),
+            m: vec![],
+        };
+        index.d.insert(key, new_index);
+        if level > 3 {
+            new_index.m.push(id.to_string());
+        }
+    } else {
+
+    }
 }
