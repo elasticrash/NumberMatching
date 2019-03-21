@@ -13,10 +13,10 @@ fn main() {
     let generated_numbers = random_number_generator();
     println!("{:?}", generated_numbers);
 
-    let mut indexed_tokens:HashMap<i32, Indx> = HashMap::new();
+    let mut indexed_tokens: HashMap<i32, Indx> = HashMap::new();
 
     for x in 0..generated_numbers.len() {
-        tokenize(generated_numbers[x], &mut indexed_tokens);
+        tokenize(generated_numbers[x], &mut indexed_tokens, x);
     }
 }
 
@@ -31,28 +31,33 @@ fn random_number_generator() -> Vec<i32> {
     return numbers;
 }
 
-fn tokenize(num: i32, index: &mut HashMap<i32, Indx>){
+fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize) {
     let char_vec: Vec<char> = num.to_string().chars().collect();
 
-    for x in 0..char_vec.len(){
+    for x in 0..char_vec.len() {
         let digit = char_vec[x];
         let string_key = digit.to_string();
         let key = i32::from_str(&string_key).unwrap_or(0);
 
         if !index.contains_key(&key) {
-            
             let new_index = Indx {
                 d: HashMap::new(),
-                m: vec![]
+                m: vec![],
             };
 
             index.insert(key, new_index);
-
-            if char_vec.len() - x < 4 {
-                continue;
-            }
-
-            let next_step = &num.to_string()[..(x+1)];
         }
+
+        if char_vec.len() - x < 4 {
+            continue;
+        }
+
+        let next_step = &num.to_string()[(x + 1)..];
+
+        populate_next_level(next_step, index.get(key), id);
     }
+}
+
+fn populate_next_level(step: String, index: &mut HashMap<i32, Indx>, id: usize) {
+    println!("{:?}", step);
 }
