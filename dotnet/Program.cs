@@ -90,20 +90,7 @@ namespace dotnet
 
                 if (charArray.Length - i < 4) continue;
                 var nextStep = n.Substring(i + 1);
-                var nextKey = digit & 0x0f;
-                Index nextIndex = null;
-
-                if (Indices[key].Lookup.ContainsKey(nextKey))
-                {
-                    nextIndex = Indices[key].Lookup[nextKey];
-                }
-                else
-                {
-                    nextIndex = new Index();
-                    Indices[key].Lookup.Add(nextKey, nextIndex);
-                }
-
-                PopulateNextLevel(nextStep, nextIndex, id, nextLevel);
+                PopulateNextLevel(nextStep, Indices[key], id, nextLevel);
             }
         }
 
@@ -154,8 +141,9 @@ namespace dotnet
             var matches = new List<int>();
             var result = new List<Index>();
 
-            foreach (var t in searchCharArray)
+            for (int i = 1; i < searchCharArray.Length; i++)
             {
+                char t = searchCharArray[i];
                 var key = t & 0x0f;
                 if (!current.Lookup.ContainsKey(key))
                 {
