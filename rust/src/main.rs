@@ -80,6 +80,18 @@ fn populate_next_level(step: String, mut opt: Option<&mut Indx>, id: usize, leve
         }
         index.d.insert(key, new_index);
     } else {
+        let exist: &mut Indx = index.d.get_mut(&key).unwrap();
+        let iter = exist.m.into_iter();
+        let duplicate = iter.any(|&x: &String| x == id.to_string());
 
+        if duplicate {
+            if level > 3 {
+                exist.m.push(id.to_string());
+            }
+        }
     }
+
+    let previous: &mut Indx = index.d.get_mut(&key).unwrap();
+    let next_step = &step.to_string()[(x + 1)..];
+    populate_next_level(next_step.to_string(), previous, id, level + 1);
 }
