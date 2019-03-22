@@ -127,7 +127,6 @@ namespace dotnet
             var nextStep = sub.Substring(1);
             var nextLevel = level + 1;
 
-
             PopulateNextLevel(nextStep, previousIndex, id, nextLevel);
         }
 

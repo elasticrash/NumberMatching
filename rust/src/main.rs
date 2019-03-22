@@ -2,6 +2,7 @@ extern crate rand;
 use rand::Rng;
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 struct Indx {
     d: HashMap<i32, Indx>,
@@ -9,22 +10,29 @@ struct Indx {
 }
 
 fn main() {
+    let start = print_time();
     println!("Generating Random Numbers");
     let generated_numbers = random_number_generator();
-    println!("{:?}", generated_numbers);
+    // println!("{:?}", generated_numbers);
 
     let mut indexed_tokens: HashMap<i32, Indx> = HashMap::new();
 
     for x in 0..generated_numbers.len() {
         tokenize(generated_numbers[x], &mut indexed_tokens, x, 1);
     }
+    let end = print_time();
+    println!("took {:?} nanoseconds to create the index", end - start);
+    println!(
+        "took {:?} milliseconds to create the index",
+        (end - start) / 1000000
+    );
 }
 
 fn random_number_generator() -> Vec<i32> {
     let mut numbers: Vec<i32> = vec![];
     let mut rng = rand::thread_rng();
 
-    for _x in 0..100 {
+    for _x in 0..10000 {
         numbers.push(rng.gen_range(1000000, 9999999));
     }
 
@@ -40,7 +48,7 @@ fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize, level: i32) {
         let key = i32::from_str(&string_key).unwrap_or(0);
 
         if !index.contains_key(&key) {
-            let mut new_index = Indx {
+            let new_index = Indx {
                 d: HashMap::new(),
                 m: vec![],
             };
@@ -58,7 +66,7 @@ fn tokenize(num: i32, index: &mut HashMap<i32, Indx>, id: usize, level: i32) {
     }
 }
 
-fn populate_next_level(step: String, mut opt: Option<&mut Indx>, id: usize, level: i32) {
+fn populate_next_level(step: String, opt: Option<&mut Indx>, id: usize, level: i32) {
     let sub: Vec<char> = step.chars().collect();
     if sub.len() == 0 {
         return;
@@ -81,8 +89,9 @@ fn populate_next_level(step: String, mut opt: Option<&mut Indx>, id: usize, leve
         index.d.insert(key, new_index);
     } else {
         let exist: &mut Indx = index.d.get_mut(&key).unwrap();
-        let iter = exist.m.into_iter();
-        let duplicate = iter.any(|&x: &String| x == id.to_string());
+        let itr_indx = &exist.m;
+        let mut itr = itr_indx.into_iter();
+        let duplicate = itr.any(|x| x == &id.to_string());
 
         if duplicate {
             if level > 3 {
@@ -91,7 +100,17 @@ fn populate_next_level(step: String, mut opt: Option<&mut Indx>, id: usize, leve
         }
     }
 
-    let previous: &mut Indx = index.d.get_mut(&key).unwrap();
-    let next_step = &step.to_string()[(x + 1)..];
+    let previous: Option<&mut Indx> = Some(index.d.get_mut(&key).unwrap());
+    let next_step = &step.to_string()[(1)..];
     populate_next_level(next_step.to_string(), previous, id, level + 1);
+}
+
+fn print_time() -> u64 {
+    let start = SystemTime::now();
+    let since_the_epoch = start
+        .duration_since(UNIX_EPOCH)
+        .expect("Time went backwards");
+
+    let in_ms = since_the_epoch.as_secs() * 1000000000 + since_the_epoch.subsec_nanos() as u64;
+    return in_ms;
 }
