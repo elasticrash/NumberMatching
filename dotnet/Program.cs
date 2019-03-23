@@ -137,8 +137,6 @@ namespace dotnet
             if (searchCharArray.Length < 4) return "you need at least 4 characters to do a search";
 
             var current = Indices[search[0] & 0x0f];
-            var matches = new List<int>();
-            var result = new List<Index>();
 
             for (int i = 1; i < searchCharArray.Length; i++)
             {
@@ -155,18 +153,15 @@ namespace dotnet
 
             if (current != null)
             {
-                result.Add(current);
+                if (current.Matches.Count == 0) return "no matches found";
+
+                var getNumbers = current.Matches.Select(m => _numbers[m]).Distinct().ToList();
+                return string.Join(",", getNumbers);
             }
             else
             {
                 return "no matches found";
             }
-
-            if (matches.Count == 0) matches = result.SelectMany(x => x.Matches).ToList();
-
-            if (matches.Count == 0) return "no matches found";
-            var getNumbers = matches.Select(m => _numbers[m]).ToList();
-            return string.Join(",", getNumbers);
         }
     }
 }
