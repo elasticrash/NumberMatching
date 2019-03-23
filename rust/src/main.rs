@@ -6,6 +6,7 @@ use std::io::Write;
 use std::str::FromStr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashSet;
 
 struct Indx {
     d: HashMap<i32, Indx>,
@@ -13,7 +14,7 @@ struct Indx {
 }
 
 static POINTER: AtomicUsize = AtomicUsize::new(1);
-static SIZE: i32 = 10000;
+static SIZE: i32 = 50000;
 fn main() {
     let start = print_time();
     println!("Generating Random Numbers");
@@ -42,8 +43,16 @@ fn random_number_generator() -> Vec<i32> {
     let mut numbers: Vec<i32> = vec![];
     let mut rng = rand::thread_rng();
 
-    for _x in 0..SIZE {
-        numbers.push(rng.gen_range(1000000, 9999999));
+    let mut item = 0;
+    loop {
+        let random_number: i32 = rng.gen_range(1000000, 9999999);
+        if !numbers.iter().any(|x| x == &random_number) {
+            numbers.push(random_number);
+            item += 1;
+        }
+        if item == SIZE {
+            break;
+        }
     }
 
     return numbers;
@@ -107,8 +116,8 @@ fn populate_next_level(step: String, opt: Option<&mut Indx>, id: usize, level: i
     } else {
         let exist: &mut Indx = index.d.get_mut(&key).unwrap();
         let itr_indx = &exist.m;
-        let mut itr = itr_indx.into_iter();
-        let duplicate = itr.any(|x| x == &id);
+        let mut itr = itr_indx.iter();
+        let duplicate = itr.any(|x| x == &(id as i32));
 
         if duplicate {
             if level > 3 {
@@ -184,10 +193,8 @@ fn number_search(search: &str, set: &HashMap<i32, Indx>, num: &Vec<i32>) {
     }
 
     if !broken {
-        for x in 1..current.m.len() {
-            let i:usize = current.m[x as i32];
-            println!("results {:?}", num[i]);
-        }
+         println!("results found: {:?} ", current.m.len());
+         current.m.iter().cloned().collect::<HashSet<_>>().iter().map(|x| num[*x as usize]).for_each(|x| println!("{}", x));
     } else {
         println!("no matches found");
     }

@@ -153,17 +153,15 @@ namespace dotnet
 
             if (current != null)
             {
-                if (matches.Count == 0) return "no matches found";
+                if (current.Matches.Count == 0) return "no matches found";
 
-                var getNumbers = current.Matches.Select(m => _numbers[m]).ToList();
+                var getNumbers = current.Matches.Select(m => _numbers[m]).Distinct().ToList();
                 return string.Join(",", getNumbers);
             }
             else
             {
                 return "no matches found";
             }
-
-
         }
     }
 }
