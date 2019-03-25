@@ -35,6 +35,9 @@ fn main() {
     let mut indexed_tokens: HashMap<i64, Indx> = HashMap::new();
 
     for x in 0..generated_numbers.len() {
+        if x < 10 {
+            println!("{:?}", generated_numbers[x]);
+        }
         tokenize(generated_numbers[x], &mut indexed_tokens, x, 1);
     }
     let end = print_time();
