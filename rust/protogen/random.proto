@@ -1,0 +1,7 @@
+syntax = "proto2";
+
+package dotnet;
+message RandomNumberGenerator {
+       repeated int64 RandomNumbers = 1;
+}
+       
