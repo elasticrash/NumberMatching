@@ -38,7 +38,7 @@ fn main() {
         if x < 10 {
             println!("{:?}", generated_numbers[x]);
         }
-        tokenize(generated_numbers[x], &mut indexed_tokens, x, 1);
+        tokenize(&generated_numbers[x], &mut indexed_tokens, x, 1);
     }
     let end = print_time();
     print_duration(&start, &end);
@@ -80,7 +80,7 @@ fn print_duration(start: &u64, end: &u64) {
     println!(" took {:?} milliseconds", (end - start) / 1000000);
 }
 
-fn tokenize(num: i64, index: &mut HashMap<i64, Indx>, id: usize, level: i32) {
+fn tokenize(num: &i64, index: &mut HashMap<i64, Indx>, id: usize, level: i32) {
     if level == 1 {
         if POINTER.load(Ordering::SeqCst) % 100 == 0 {
             print!("\r building index {:?}/{:?}", POINTER, SIZE);
@@ -166,7 +166,12 @@ fn print_time() -> u64 {
 fn read_from_stdin() -> String {
     io::stdout().flush().unwrap();
     let mut val = String::new();
-    io::stdin().read_line(&mut val);
+    match io::stdin().read_line(&mut val) {
+        Ok(_n) => {}
+        Err(error) => {
+            println!("{}", error);
+        }
+    };
     return val;
 }
 
