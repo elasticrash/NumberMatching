@@ -1,4 +1,4 @@
-typescript/node_modules
-typescript/dist
-rust/target
-rust/*.lock
+proof_of_concept/typescript/node_modules
+proof_of_concept/typescript/dist
+proof_of_concept/rust/target
+proof_of_concept/rust/*.lock
