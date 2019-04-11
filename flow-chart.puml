@@ -1,6 +1,15 @@
 @startuml
+skinparam linetype ortho
+(*) --> ===BEGIN=== 
+===BEGIN=== -->"Search"
+===BEGIN===  --> "Send Number"
+"Send Number" --> "Save To Disk"
 
-(*) --> "First Activity"
-"First Activity" --> (*)
+"Search" --> "Look at Disk"
+"Search" --> "Look at Memory"
+"Look at Disk" --> ===MERGE===
+"Look at Memory" --> ===MERGE===
+===MERGE=== --> "Results"
+ "TT" --> (*)
 
 @enduml
