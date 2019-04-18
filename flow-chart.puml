@@ -1,15 +1,46 @@
 @startuml
 skinparam linetype ortho
+skinparam activity {
+BackgroundColor<< Store >> Silver
+BackgroundColor<< Client >> LightBlue
+}
+
 (*) --> ===BEGIN=== 
-===BEGIN=== -->"Search"
-===BEGIN===  --> "Send Number"
-"Send Number" --> "Save To Disk"
 
-"Search" --> "Look at Disk"
-"Search" --> "Look at Memory"
-"Look at Disk" --> ===MERGE===
-"Look at Memory" --> ===MERGE===
-===MERGE=== --> "Results"
- "TT" --> (*)
+partition Search #LightGreen{
+===BEGIN=== -->"Search Term"
+"Search Term" --> "Look at Memory"
+"Look at Memory" --> "Get Results"
+}
 
+partition Add #LightPink {
+===BEGIN===  --> "New Number"
+"New Number" --> === SAVE === 
+=== SAVE === --> "Save To Disk"
+=== SAVE === --> "Push to Memory"
+}
+
+partition Scheduler #LightCoral {
+===BEGIN===  --> "Run Job every (x) minutes"
+"Run Job every (x) minutes" -> "Pick up disk entries" 
+"Pick up disk entries" --> "Pick Main Disk Object"
+"Pick Main Disk Object" --> "Merge Object"
+"Merge Object" --> "Create New Main Disk Object"
+}
+
+partition Storage #LightCyan {
+"Push to Memory" --> "Memory" << Store >>
+"Save To Disk" --> "Disk" << Store >>
+}
+
+"Create New Main Disk Object" --> "Disk"
+
+"Get Results" --> "Client" << Client >>
+"Look at Memory" --> "Memory"
+"Pick Main Disk Object" --> "Disk"
+"Save To Disk" --> === ADD ====
+"Push to Memory" --> === ADD ====
+=== ADD ==== --> "Client"
+"Create New Main Disk Object" --> (*)
+"Client" --> (*)
 @enduml
